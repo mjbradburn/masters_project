@@ -4,15 +4,17 @@ var MovieCast = require('./models/MovieCast');
 var _ = require('lodash');
 
 var neo4j = window.neo4j.v1;
-var driver = neo4j.driver("bolt://localhost", neo4j.auth.basic("neo4j", "abcde"));
+//var neo4j = require('neo4j-driver').v1;
+var driver = neo4j.driver("bolt://localhost", 
+  neo4j.auth.basic("neo4j", "Charlie711"));
 
 function searchMovies(queryString) {
   var session = driver.session();
   return session
     .run(
-      'MATCH (movie:Movie) \
-      WHERE movie.title =~ {title} \
-      RETURN movie',
+      'match (movie:Skate) \
+      where movie.common_name =~ {title} \
+      return movie',
       {title: '(?i).*' + queryString + '.*'}
     )
     .then(result => {
@@ -31,12 +33,11 @@ function getMovie(title) {
   var session = driver.session();
   return session
     .run(
-      "MATCH (movie:Movie {title:{title}}) \
-      OPTIONAL MATCH (movie)<-[r]-(person:Person) \
-      RETURN movie.title AS title, \
-      collect([person.name, \
-           head(split(lower(type(r)), '_')), r.roles]) AS cast \
-      LIMIT 1", {title})
+      "MATCH (skate:Skate {common_name:{title}}) \
+      OPTIONAL MATCH (skate)-[:HAS_A]->(property:Property) \
+      RETURN skate.common_name AS Name, \
+      collect(property.desc) \
+            AS Description", {title})
     .then(result => {
       session.close();
 
@@ -44,7 +45,7 @@ function getMovie(title) {
         return null;
 
       var record = result.records[0];
-      return new MovieCast(record.get('title'), record.get('cast'));
+      return new MovieCast(record.get('Name'), record.get('Description'));
     })
     .catch(error => {
       session.close();
@@ -52,22 +53,45 @@ function getMovie(title) {
     });
 }
 
-function getGraph() {
+function getGraph(name) {
   var session = driver.session();
+  // return session
+  //   .run("match (sk:Skate)-[r:HAS_A]->(p:Property) \
+  //     return sk.common_name as Name,collect( p.desc) \
+  //     as Description")
+  //   .then( function( result ){
+  //     session.close();
+  //     driver.close();
+  //     var nodes = [], links = [];
+
+  //     _.forEach(result.records, function(value){
+  //       var species = value._fields[0];
+  //       nodes.push({id: species})
+
+  //       _.forEach(value._fields[1], function(value){
+  //         nodes.push({id: value});
+  //         links.push({source: species, target: value});
+  //       })
+  //     })
+
+  //     nodes = _.uniqWith(nodes,_.isEqual);
+  //     console.log({nodes,links});
+  //     return JSON.stringify({nodes, links});
+  //   });
   return session.run(
-    'MATCH (m:Movie)<-[:ACTED_IN]-(a:Person) \
-    RETURN m.title AS movie, collect(a.name) AS cast \
-    LIMIT {limit}', {limit: 100})
+    // 'match (sk:Skate)-[r:HAS_A]->(p:Property) return sk.common_name as Name,collect( p.desc) as Description')
+    'match (sk:Skate)-[r:HAS_A]->(p:Property) where sk.common_name = "big skate" \
+    return sk.common_name as Name,collect( p.desc) as Description')
     .then(results => {
       session.close();
       var nodes = [], rels = [], i = 0;
       results.records.forEach(res => {
-        nodes.push({title: res.get('movie'), label: 'movie'});
+        nodes.push({title: res.get('Name'), label: 'Species'});
         var target = i;
         i++;
 
-        res.get('cast').forEach(name => {
-          var actor = {title: name, label: 'actor'};
+        res.get('Description').forEach(name => {
+          var actor = {title: name, label: 'Property'};
           var source = _.findIndex(nodes, actor);
           if (source == -1) {
             nodes.push(actor);
@@ -77,7 +101,7 @@ function getGraph() {
           rels.push({source, target})
         })
       });
-
+      console.log("running getGraph()");
       return {nodes, links: rels};
     });
 }

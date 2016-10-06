@@ -2,12 +2,15 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="http://neo4j-contrib.github.io/developer-resources/language-guides/assets/css/main.css">
-    <title>Neo4j Movies</title>
+    <title>Skate Demo</title>
 </head>
 
 <body>
-<div id="graph">
-</div>
+
+<div id="graph" class="col-md-12"></div>
+
+
+
 <div role="navigation" class="navbar navbar-default navbar-static-top">
     <div class="container">
         <div class="row">
@@ -16,7 +19,7 @@
                     <li>
                         <form role="search" class="navbar-form" id="search">
                             <div class="form-group">
-                                <input type="text" value="Matrix" placeholder="Search for Movie Title" class="form-control" name="search">
+                                <input type="text" value="" placeholder="Search for Movie Title" class="form-control" name="search">
                             </div>
                             <button class="btn btn-default" type="submit">Search</button>
                         </form>
@@ -30,7 +33,7 @@
                     </a>
                 </div>
                 <div class="navbar-brand">
-                    <div class="brand">Neo4j Movies</div>
+                    <div class="brand">Skate Demo</div>
                 </div>
             </div>
         </div>
@@ -38,15 +41,13 @@
 </div>
 
 <div class="row">
-    <div class="col-md-5">
+    <div class="col-md-2">
         <div class="panel panel-default">
             <div class="panel-heading">Search Results</div>
             <table id="results" class="table table-striped table-hover">
                 <thead>
                 <tr>
-                    <th>Movie</th>
-                    <th>Released</th>
-                    <th>Tagline</th>
+                    <th>Common Name</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -62,7 +63,7 @@
                     <img src="" class="well" id="poster"/>
                 </div>
                 <div class="col-md-8 col-sm-8">
-                    <h4>Crew</h4>
+                    <h4>Properties</h4>
                     <ul id="crew">
                     </ul>
                 </div>
@@ -72,8 +73,8 @@
 </div>
 <style type="text/css">
     .node { stroke: #222; stroke-width: 1.5px; }
-    .node.actor { fill: #888; }
-    .node.movie { fill: #BBB; }
+    .node.Property { fill: #ef8a62; }
+    .node.Species { fill: #67a9cf; }
     .link { stroke: #999; stroke-opacity: .6; stroke-width: 1px; }
 </style>
 

@@ -11,16 +11,21 @@ $(function () {
 });
 
 function showMovie(title) {
+  console.log(title);
   api
     .getMovie(title)
     .then(movie => {
-      if (!movie) return;
+      if (!movie) return
 
       $("#title").text(movie.title);
-      $("#poster").attr("src", "http://neo4j-contrib.github.io/developer-resources/language-guides/assets/posters/" + movie.title + ".jpg");
+      // $("#poster").attr("src", "http://neo4j-contrib.github.io/developer-resources/language-guides/assets/posters/" + movie.title + ".jpg");
       var $list = $("#crew").empty();
+      // movie.Description.forEach(item => {
+      //   console.log(item);
+      //   $list.append($("<li>" + item  + "</li>"));
+      // })
       movie.cast.forEach(cast => {
-        $list.append($("<li>" + cast.name + " " + cast.job + (cast.job == "acted" ? " as " + cast.role : "") + "</li>"));
+        $list.append($("<li>" + cast.name +"</li>"));
       });
     }, "json");
 }
@@ -34,7 +39,7 @@ function search() {
 
       if (movies) {
         movies.forEach(movie => {
-          $("<tr><td class='movie'>" + movie.title + "</td><td>" + movie.released + "</td><td>" + movie.tagline + "</td></tr>").appendTo(t)
+          $("<tr><td class='movie'>" + movie.common_name + "</td>" ).appendTo(t)
             .click(function() {
               showMovie($(this).find("td.movie").text());
             })
@@ -42,7 +47,7 @@ function search() {
 
         var first = movies[0];
         if (first) {
-          showMovie(first.title);
+          showMovie(first.common_name);
         }
       }
     });
@@ -74,6 +79,7 @@ function renderGraph() {
         })
         .attr("r", 10)
         .call(force.drag);
+
 
       // html title attribute
       node.append("title")
