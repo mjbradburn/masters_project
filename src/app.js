@@ -28,7 +28,7 @@ function showMovie(title) {
       //   $list.append($("<li>" + item  + "</li>"));
       // })
       movie.cast.forEach(cast => {
-        $list.append($("<li>" + cast.name +"</li>"));
+        $list.append($("<li>" + cast.skate +"</li>"));
       });
     }, "json");
 }
@@ -42,20 +42,46 @@ function search() {
 
       if (movies) {
         movies.forEach(movie => {
-          $("<tr><td class='movie'>" + movie.common_name + "</td>" ).appendTo(t)
+          $("<tr><td class='movie'>" + movie.desc + "</td>" ).appendTo(t)
             .click(function() {
               showMovie($(this).find("td.movie").text());
+              $("#graph").empty();
+              renderGraph($(this).find("td.movie").text());
             })
         });
 
         var first = movies[0];
         if (first) {
-          showMovie(first.common_name);
+          showMovie(first.desc);
         }
       }
     });
 }
 
+function searchFromGraph(query) {
+  //var query = $("#search").find("input[name=search]").val();
+  api
+    .searchMovies(query)
+    .then(movies => {
+      var t = $("table#results tbody").empty();
+
+      if (movies) {
+        movies.forEach(movie => {
+          $("<tr><td class='movie'>" + movie.desc + "</td>" ).appendTo(t)
+            .click(function() {
+              showMovie($(this).find("td.movie").text());
+              $("#graph").empty();
+              renderGraph($(this).find("td.movie").text());
+            })
+        });
+
+        var first = movies[0];
+        if (first) {
+          showMovie(first.desc);
+        }
+      }
+    });
+}
 // function renderGraph() {
 //   var width = 800, height = 800;
 //   var force = d3.layout.force()
@@ -144,6 +170,14 @@ function renderGraph(queryString) {
         .text(d => {
           return d.title;
         });
+
+      //adding click interactivity
+      node.on("click",(function(d){
+        $("#graph").empty();
+        renderGraph(d.title);
+        searchFromGraph(d.title);
+
+      }));
 
       // force feed algo ticks
       force.on("tick", () => {
