@@ -1,5 +1,5 @@
 require('file?name=[name].[ext]!../node_modules/neo4j-driver/lib/browser/neo4j-web.min.js');
-var Movie = require('./models/Movie');
+var Feature = require('./models/Feature');
 var MovieCast = require('./models/MovieCast');
 var _ = require('lodash');
 
@@ -8,19 +8,19 @@ var neo4j = window.neo4j.v1;
 var driver = neo4j.driver("bolt://localhost", 
   neo4j.auth.basic("neo4j", "Charlie711"));
 
-function searchMovies(queryString) {
+function searchByFeature(queryString) {
   var session = driver.session();
   return session
     .run(
-      'match (movie:Property) \
-      where movie.desc =~ {title} \
-      return movie',
-      {title: '(?i).*' + queryString + '.*'}
+      'match (feature:Property) \
+      where feature.desc =~ {string} \
+      return feature',
+      {string: '(?i).*' + queryString + '.*'}
     )
     .then(result => {
       session.close();
       return result.records.map(record => {
-        return new Movie(record.get('movie'));
+        return new Feature(record.get('feature'));
       });
     })
     .catch(error => {
@@ -29,39 +29,38 @@ function searchMovies(queryString) {
     });
 }
 
-function getMovie(title) {
-  var session = driver.session();
-  return session
-    .run(
-      "MATCH (p1:Property {desc:{title}}) \
-      OPTIONAL MATCH (p1)<-[:HAS_A]-(skate:Skate) \
-      RETURN p1.desc AS Description, \
-      collect(skate.common_name) \
-            AS Species", {title})
-    .then(result => {
-      session.close();
+// function getMovie(title) {
+//   var session = driver.session();
+//   return session
+//     .run(
+//       "MATCH (p1:Property {desc:{title}}) \
+//       OPTIONAL MATCH (p1)<-[:HAS_A]-(skate:Skate) \
+//       RETURN p1.desc AS Description, \
+//       collect(skate.common_name) \
+//             AS Species", {title})
+//     .then(result => {
+//       session.close();
+//       console.log(result.records);
 
-      if (_.isEmpty(result.records))
-        return null;
+//       if (_.isEmpty(result.records))
+//         return null;
 
-      var record = result.records[0];
-      return new MovieCast(record.get('Description'), record.get('Species'));
-    })
-    .catch(error => {
-      session.close();
-      throw error;
-    });
-}
+//       var record = result.records[0];
+//       return new MovieCast(record.get('Description'), record.get('Species'));
+//     })
+//     .catch(error => {
+//       session.close();
+//       throw error;
+//     });
+// }
 
 function getGraph(queryString) {
-  console.log("calling getGraph(param)");
   var session = driver.session();
   var defaultQuery = 'match (sk:Skate)-[r:HAS_A]->(p:Property)  \
       return p.desc as Description,collect( sk.common_name) as Name'
   var optional = "match (sk:Skate)-[r:HAS_A]->(p:Property) where p.desc = " + "'" + queryString + "'" + " \
       return p.desc as Description,collect( sk.common_name) as Name"
   var query = (!queryString)? defaultQuery : optional;
-  console.log("query is " + query);
 
   return session.run(
       query)
@@ -84,7 +83,6 @@ function getGraph(queryString) {
           rels.push({source, target})
         })
       });
-      console.log("running getGraph()" + queryString);
       return {nodes, links: rels};
     });
 }
@@ -147,7 +145,7 @@ function getGraph(queryString) {
 //     });
 // }
 
-exports.searchMovies = searchMovies;
-exports.getMovie = getMovie;
+exports.searchByFeature = searchByFeature;
+// exports.getMovie = getMovie;
 exports.getGraph = getGraph;
 

@@ -13,75 +13,75 @@ $(function () {
 
 });
 
-function showMovie(title) {
-  console.log(title);
-  api
-    .getMovie(title)
-    .then(movie => {
-      if (!movie) return
+// function showMovie(title) {
+//   console.log(title);
+//   api
+//     .getMovie(title)
+//     .then(movie => {
+//       if (!movie) return
 
-      $("#title").text(movie.title);
-      // $("#poster").attr("src", "http://neo4j-contrib.github.io/developer-resources/language-guides/assets/posters/" + movie.title + ".jpg");
-      var $list = $("#crew").empty();
-      // movie.Description.forEach(item => {
-      //   console.log(item);
-      //   $list.append($("<li>" + item  + "</li>"));
-      // })
-      movie.cast.forEach(cast => {
-        $list.append($("<li>" + cast.skate +"</li>"));
-      });
-    }, "json");
-}
+//       $("#title").text(movie.title);
+//       // $("#poster").attr("src", "http://neo4j-contrib.github.io/developer-resources/language-guides/assets/posters/" + movie.title + ".jpg");
+//       var $list = $("#crew").empty();
+//       // movie.Description.forEach(item => {
+//       //   console.log(item);
+//       //   $list.append($("<li>" + item  + "</li>"));
+//       // })
+//       movie.cast.forEach(cast => {
+//         $list.append($("<li>" + cast.skate +"</li>"));
+//       });
+//     }, "json");
+// }
 
 function search() {
   var query = $("#search").find("input[name=search]").val();
   api
-    .searchMovies(query)
-    .then(movies => {
+    .searchByFeature(query)
+    .then(features => {
       var t = $("table#results tbody").empty();
 
-      if (movies) {
-        movies.forEach(movie => {
-          $("<tr><td class='movie'>" + movie.desc + "</td>" ).appendTo(t)
+      if (features) {
+        features.forEach(feature => {
+          $("<tr><td class='feature'>" + feature.desc + "</td>" ).appendTo(t)
             .click(function() {
-              showMovie($(this).find("td.movie").text());
+              // showMovie($(this).find("td.movie").text());
               $("#graph").empty();
-              renderGraph($(this).find("td.movie").text());
+              renderGraph($(this).find("td.feature").text());
             })
         });
 
-        var first = movies[0];
-        if (first) {
-          showMovie(first.desc);
-        }
+        // var first = movies[0];
+        // if (first) {
+        //   showMovie(first.desc);
+        // }
       }
     });
 }
 
-function searchFromGraph(query) {
-  //var query = $("#search").find("input[name=search]").val();
-  api
-    .searchMovies(query)
-    .then(movies => {
-      var t = $("table#results tbody").empty();
+// function searchFromGraph(query) {
+//   //var query = $("#search").find("input[name=search]").val();
+//   api
+//     .searchMovies(query)
+//     .then(movies => {
+//       var t = $("table#results tbody").empty();
 
-      if (movies) {
-        movies.forEach(movie => {
-          $("<tr><td class='movie'>" + movie.desc + "</td>" ).appendTo(t)
-            .click(function() {
-              showMovie($(this).find("td.movie").text());
-              $("#graph").empty();
-              renderGraph($(this).find("td.movie").text());
-            })
-        });
+//       if (movies) {
+//         movies.forEach(movie => {
+//           $("<tr><td class='movie'>" + movie.desc + "</td>" ).appendTo(t)
+//             .click(function() {
+//               showMovie($(this).find("td.movie").text());
+//               $("#graph").empty();
+//               renderGraph($(this).find("td.movie").text());
+//             })
+//         });
 
-        var first = movies[0];
-        if (first) {
-          showMovie(first.desc);
-        }
-      }
-    });
-}
+//         var first = movies[0];
+//         if (first) {
+//           showMovie(first.desc);
+//         }
+//       }
+//     });
+// }
 // function renderGraph() {
 //   var width = 800, height = 800;
 //   var force = d3.layout.force()
@@ -146,6 +146,8 @@ function renderGraph(queryString) {
     .attr("width", "100%").attr("height", "100%")
     .attr("pointer-events", "all");
 
+  // $("svg").css({display: 'inline-block'});//{top: -100, left: 200, position:'relative'});
+
   api
     .getGraph(queryString)
     .then(graph => {
@@ -178,6 +180,7 @@ function renderGraph(queryString) {
         searchFromGraph(d.title);
 
       }));
+
 
       // force feed algo ticks
       force.on("tick", () => {
