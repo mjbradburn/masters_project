@@ -1,0 +1,36 @@
+/* --------------------------
+General Styles 
+----------------------------- */
+body {
+	font-family: 'Montserrat', sans-serif;
+	font-weight: 400;
+	color: #333;
+	padding-top: 100px;
+}
+
+/* ---------------------------------------
+Navbar and Navigation Styles / Overrides 
+------------------------------------------ */
+.navbar-fixed-top {
+	position: absolute;
+	padding-top: 10px;
+	padding-bottom: 10px;
+}
+
+/*.form-control-inline {
+    min-width: 200;
+    width: 800;
+    display: inline;
+}*/
+/* ---------------------------------------
+Row styles / Overrides 
+------------------------------------------ */
+.row {
+	padding-left: 10px;
+	padding-right: 10px;
+}
+
+.panel .panel-default {
+	padding-left:100px;
+	padding-right:10px;
+}

@@ -5,7 +5,7 @@ function MovieCast(title, cast) {
     title: title,
     cast: cast.map(function (c) {
       return {
-        name: c
+        skate: c
         // job: c[1],
         // role: c[2]
       }
