@@ -17,6 +17,11 @@ Navbar and Navigation Styles / Overrides
 	padding-bottom: 10px;
 }
 
+/*.form-control-inline {
+    min-width: 200;
+    width: 800;
+    display: inline;
+}*/
 /* ---------------------------------------
 Row styles / Overrides 
 ------------------------------------------ */

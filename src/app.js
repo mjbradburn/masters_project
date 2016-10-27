@@ -1,14 +1,23 @@
 var api = require('./neo4jApi');
 
 $(function () {
-  renderGraph("");
+  
+  $("#query-builder").tagsinput('add', "");
+  // renderGraph("");
   search();
 
   $("#search").submit(e => {
     e.preventDefault();
     search();
     $("#graph").empty();
-    renderGraph($("#search").find("input[name=search]").val());
+    //renderGraph($("#search").find("input[name=search]").val());
+  });
+
+  $("#query").submit(e => {
+    e.preventDefault();
+    query();
+    // $("#graph").empty();
+    //renderGraph($("#search").find("input[name=search]").val());
   });
 
 });
@@ -45,8 +54,11 @@ function search() {
           $("<tr><td class='feature'>" + feature.desc + "</td>" ).appendTo(t)
             .click(function() {
               // showMovie($(this).find("td.movie").text());
+              
               $("#graph").empty();
-              renderGraph($(this).find("td.feature").text());
+              // renderGraph($(this).find("td.feature").text());
+
+              $("#query-builder").tagsinput('add', feature.desc);
             })
         });
 
@@ -56,6 +68,24 @@ function search() {
         // }
       }
     });
+}
+
+function query(){
+  var tokens = $('#query-builder').val();
+  var token_count = tokens.split(",").length;
+
+  var t = $('#candidates-count tbody').empty();
+  var candidates = api.getCandidates(tokens).then( candidates => {
+    candidates.forEach(candidate => {
+      $('<tr><td>' + candidate.species + '</td><td>' + Math.round(candidate.count/token_count*100) + '%</td>').appendTo(t);
+    })
+  }
+    
+
+
+    );
+  
+
 }
 
 // function searchFromGraph(query) {
@@ -141,7 +171,6 @@ function renderGraph(queryString) {
   var width = 800, height = 800;
   var force = d3.layout.force()
     .charge(-200).linkDistance(30).size([width, height]);
-  console.log("rendergraph " + queryString);
   var svg = d3.select("#graph").append("svg")
     .attr("width", "100%").attr("height", "100%")
     .attr("pointer-events", "all");
@@ -178,7 +207,7 @@ function renderGraph(queryString) {
         $("#graph").empty();
         renderGraph(d.title);
         searchFromGraph(d.title);
-
+        //$("#query-builder").tagsinput('add', d.title);
       }));
 
 

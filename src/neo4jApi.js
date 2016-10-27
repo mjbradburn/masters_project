@@ -1,6 +1,7 @@
 require('file?name=[name].[ext]!../node_modules/neo4j-driver/lib/browser/neo4j-web.min.js');
 var Feature = require('./models/Feature');
 var MovieCast = require('./models/MovieCast');
+var Candidate = require('./models/Candidate');
 var _ = require('lodash');
 
 var neo4j = window.neo4j.v1;
@@ -8,14 +9,27 @@ var neo4j = window.neo4j.v1;
 var driver = neo4j.driver("bolt://localhost", 
   neo4j.auth.basic("neo4j", "Charlie711"));
 
+function tokenizeString(queryString){
+  //tokenize string
+  var tokens = queryString.split(",");
+  var tokenQueryString = "";
+  for (var i = 0; i < tokens.length; i++){
+    tokenQueryString += "feature.desc CONTAINS '" + tokens[i] + "'";
+    if (i != tokens.length - 1)
+      tokenQueryString += " OR "
+  }
+  return tokenQueryString;
+}
+
 function searchByFeature(queryString) {
+
+  var tokenQueryString = tokenizeString(queryString);
+
   var session = driver.session();
   return session
     .run(
-      'match (feature:Property) \
-      where feature.desc =~ {string} \
-      return feature',
-      {string: '(?i).*' + queryString + '.*'}
+      "MATCH (feature:Property) \
+      where " + tokenQueryString + " return feature"
     )
     .then(result => {
       session.close();
@@ -27,6 +41,10 @@ function searchByFeature(queryString) {
       session.close();
       throw error;
     });
+}
+
+function makeQuery(){
+
 }
 
 // function getMovie(title) {
@@ -53,6 +71,31 @@ function searchByFeature(queryString) {
 //       throw error;
 //     });
 // }
+
+function getCandidates(tokenString){
+  var tokenQueryString = tokenizeString(tokenString);
+  var session = driver.session();
+  return session
+    .run(
+      "MATCH (feature:Property)<--(species:Skate) \
+      where " + tokenQueryString + "\
+      return species, count(*) AS count order by count desc"
+    ).then(results =>{
+      session.close();
+      var candidates =[];
+       _.forEach(results.records, function(value){
+      
+      var candidate = 
+      new Candidate(value._fields[0].properties.common_name,value._fields[1].low);
+      candidates.push(candidate);
+    })
+      return candidates;
+    })
+    .catch(error => {
+      session.close();
+      throw error;
+    });
+}
 
 function getGraph(queryString) {
   var session = driver.session();
@@ -148,4 +191,5 @@ function getGraph(queryString) {
 exports.searchByFeature = searchByFeature;
 // exports.getMovie = getMovie;
 exports.getGraph = getGraph;
-
+exports.getCandidates = getCandidates;
+exports.tokenizeString = tokenizeString;
