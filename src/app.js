@@ -79,14 +79,31 @@ function query(){
     candidates.forEach(candidate => {
       $('<tr><td>' + candidate.species + '</td><td>' + Math.round(candidate.count/token_count*100) + '%</td>').appendTo(t);
     })
-  }
-    
+  });
+  //pass tokens to api.getNextBest
+  var ta = $('#next-best tbody').empty();
+  var features = api.getNextBest(tokens).then( features => {
+    features.forEach(feature => {
+      console.log(feature.desc);
+      $('<tr><td>' + feature.desc + '</td><td>' + feature.count + '</td>').appendTo(ta);
 
-
-    );
-  
-
+    })
+  });
 }
+
+// function suggest(){
+//   var tokens = $('#query-builder').val();
+
+//   //pass tokens to api.getNextBest
+//   var t = $('#next-best tbody').empty();
+//   var features = api.getNextBest(tokens).then( features => {
+//     features.forEach(feature => {
+//       $('<tr><td>' + feature.desc + '</td><td>' + feature.count + '%</td>').appendTo(t);
+//     })
+//   }
+//     );
+
+// }
 
 // function searchFromGraph(query) {
 //   //var query = $("#search").find("input[name=search]").val();

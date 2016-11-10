@@ -2,6 +2,7 @@ require('file?name=[name].[ext]!../node_modules/neo4j-driver/lib/browser/neo4j-w
 var Feature = require('./models/Feature');
 var MovieCast = require('./models/MovieCast');
 var Candidate = require('./models/Candidate');
+var NextBestFeature = require('./models/NextBestFeature.js');
 var _ = require('lodash');
 
 var neo4j = window.neo4j.v1;
@@ -19,6 +20,25 @@ function tokenizeString(queryString){
       tokenQueryString += " OR "
   }
   return tokenQueryString;
+}
+
+function createQueryGetNextBest(tokenString){
+  var tokens = tokenString.split(",");
+  var queryString = `MATCH (feature0:Property {desc:'${tokens[0]}' })<--(sk:Skate)`;
+  
+  for (var i = 1; i < tokens.length; i++){
+    queryString += `, (sk)-->(feature${i}:Property {desc:  '${tokens[i]}'})`;
+  }
+  queryString += ',(sk)-->(nextFeature:Property) where not (ID(nextFeature) in [';
+  
+  for (var i = 0; i < tokens.length; i++){
+    queryString += `ID(feature${i})`;
+    if (i != tokens.length -1)
+      queryString += ", "
+  }
+
+  queryString += ']) ';
+  return queryString;
 }
 
 function searchByFeature(queryString) {
@@ -43,8 +63,45 @@ function searchByFeature(queryString) {
     });
 }
 
-function makeQuery(){
+function getNextBest(tokenString){
+  var nextBestObject;
+  var species_count;
+  //create query from tokenString
+  var base_query = createQueryGetNextBest(tokenString);
+  var next_best_query = base_query + "return distinct nextFeature, count(*) as count order by count desc";
+  //return list of adjacent features and count of species
+  console.log(next_best_query);
+  var session = driver.session();
+  return session
+  .run(next_best_query)
+  .then(result => {
+    session.close();
+    var features = []; 
+    _.forEach(result.records, function(value){
+   
+      var feature = new NextBestFeature(value._fields[0].properties.desc, value._fields[1].low);
+      features.push(feature);
+  })
+  return features;
+  })
+  .catch(error => {
+    session.close();
+    throw error;
+  });
 
+  // //create new query
+  // var species_count_query = query + "return count(distinct sk) as species_count";
+  // session
+  // .run(species_count_query)
+  // .then(result => {
+  //   session.close();
+  //   species_count = result.records[0];
+  // }).
+  // catch(error => {
+  //   session.close();
+  //   throw error;
+  // });
+  // return {features, count: species_count };
 }
 
 // function getMovie(title) {
@@ -192,4 +249,4 @@ exports.searchByFeature = searchByFeature;
 // exports.getMovie = getMovie;
 exports.getGraph = getGraph;
 exports.getCandidates = getCandidates;
-exports.tokenizeString = tokenizeString;
+exports.getNextBest = getNextBest;
