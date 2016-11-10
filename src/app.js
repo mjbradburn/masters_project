@@ -3,25 +3,35 @@ var api = require('./neo4jApi');
 $(function () {
   
   $("#query-builder").tagsinput('add', "");
-  // renderGraph("");
+  renderGraph("");
   search();
 
   $("#search").submit(e => {
     e.preventDefault();
     search();
     $("#graph").empty();
-    //renderGraph($("#search").find("input[name=search]").val());
+    renderGraph($("#search").find("input[name=search]").val());
   });
 
   $("#query").submit(e => {
     e.preventDefault();
     query();
-    // $("#graph").empty();
+    //$("#graph").empty();
     //renderGraph($("#search").find("input[name=search]").val());
   });
 
 });
 
+$("#search-clear").click(function(){
+  $('#search-input').val("");
+  search();
+});
+
+$("#query-clear").click(function(){
+  $('#query-builder').tagsinput('removeAll');
+  $('#candidates-count tbody').empty();
+  $('#next-best tbody').empty();
+});
 // function showMovie(title) {
 //   console.log(title);
 //   api
@@ -85,8 +95,11 @@ function query(){
   var features = api.getNextBest(tokens).then( features => {
     features.forEach(feature => {
       console.log(feature.desc);
-      $('<tr><td>' + feature.desc + '</td><td>' + feature.count + '</td>').appendTo(ta);
+      $('<tr><td>' + feature.desc + '</td><td>' + feature.count + '</td>').appendTo(ta)
+      .click(function(){
+        $("#query-builder").tagsinput('add', feature.desc);
 
+      });
     })
   });
 }
@@ -220,11 +233,12 @@ function renderGraph(queryString) {
         });
 
       //adding click interactivity
-      node.on("click",(function(d){
+      node.on("dblclick",(function(d){
         $("#graph").empty();
         renderGraph(d.title);
         searchFromGraph(d.title);
         //$("#query-builder").tagsinput('add', d.title);
+        
       }));
 
 

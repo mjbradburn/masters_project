@@ -15,15 +15,17 @@
             <div class = "row">
                 <form id = "search" class="navbar-form navbar-left">
                     <div class="form-group">
-                        <input  type="text" class="form-control" placeholder="Search" name="search">
+                        <input id="search-input"  type="search" class="form-control" placeholder="Search" name="search">
                     </div>
                     <button type="submit" class="btn btn-default">Submit</button>
+                    <button id="search-clear" type="button" class="btn btn-default">Clear</button>
                 </form>
                 <form id = "query" class="navbar-form navbar-right">
                     <div class="form-group">
                         <input multiple  id = "query-builder" type="text" class="form-control form-control-inline"  name="search" data-role = "tags-input">
                     </div>
                     <button type="submit" class="btn btn-default">Query</button>
+                    <button id="query-clear" type="button" class="btn btn-default">Clear</button>
                 </form>
             </div>
 
@@ -51,7 +53,7 @@
         <div class="row">
             <div class="col-xs-2">
                 <div class="panel panel-default ">
-                    <div class="panel-heading">Results</div>
+                    <div class="panel-heading">Results</div> 
                     <table id="results" class="table table-striped table-hover">
                         <thead>
                             <tr>

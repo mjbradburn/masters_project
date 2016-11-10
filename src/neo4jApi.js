@@ -154,6 +154,39 @@ function getCandidates(tokenString){
     });
 }
 
+// function getGraph(queryString) {
+//   var session = driver.session();
+//   var defaultQuery = 'match (sk:Skate)-[r:HAS_A]->(p:Property)  \
+//       return p.desc as Description,collect( sk.common_name) as Name'
+//   var optional = "match (sk:Skate)-[r:HAS_A]->(p:Property) where p.desc = " + "'" + queryString + "'" + " \
+//       return p.desc as Description,collect( sk.common_name) as Name"
+//   var query = (!queryString)? defaultQuery : optional;
+
+//   return session.run(
+//       query)
+//     .then(results => {
+//       session.close();
+//       var nodes = [], rels = [], i = 0;
+//       results.records.forEach(res => {
+//         nodes.push({title: res.get('Description'), label: 'Property'});
+//         var target = i;
+//         i++;
+
+//         res.get('Name').forEach(name => {
+//           var species = {title: name, label: 'Skate'};
+//           var source = _.findIndex(nodes, species);
+//           if (source == -1) {
+//             nodes.push(species);
+//             source = i;
+//             i++;
+//           }
+//           rels.push({source, target})
+//         })
+//       });
+//       return {nodes, links: rels};
+//     });
+// }
+
 function getGraph(queryString) {
   var session = driver.session();
   var defaultQuery = 'match (sk:Skate)-[r:HAS_A]->(p:Property)  \
@@ -173,10 +206,10 @@ function getGraph(queryString) {
         i++;
 
         res.get('Name').forEach(name => {
-          var actor = {title: name, label: 'Skate'};
-          var source = _.findIndex(nodes, actor);
+          var species = {title: name, label: 'Skate'};
+          var source = _.findIndex(nodes, species);
           if (source == -1) {
-            nodes.push(actor);
+            nodes.push(species);
             source = i;
             i++;
           }
