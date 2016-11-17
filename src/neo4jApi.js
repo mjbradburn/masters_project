@@ -11,6 +11,8 @@ var driver = neo4j.driver("bolt://localhost",
   neo4j.auth.basic("neo4j", "Charlie711"));
 
 function tokenizeString(queryString){
+  // 0=>"OR", 1=>"AND"
+  //var con = operation == 0? " OR " : " AND "; 
   //tokenize string
   var tokens = queryString.split(",");
   var tokenQueryString = "";
@@ -41,6 +43,20 @@ function createQueryGetNextBest(tokenString){
   return queryString;
 }
 
+function createQueryFromQueryTokens(tokenString){
+  var tokens = tokenString.split(",");
+  var queryString = ``;// = `MATCH (feature0:Property {desc:'${tokens[0]}' })<--(sk:Skate)`;
+  console.log(tokens);
+  for (var i = 0; i < tokens.length; i++){
+    queryString += `MATCH (sk)-->(feature${i}:Property {desc:  '${tokens[i]}'}) `;
+  }
+
+  queryString += `MATCH (sk)-->(allFeatures:Property) \
+  return sk.common_name as Name, collect(allFeatures.desc) AS Feature
+  order by sk.common_name`;
+  return queryString;  
+}
+
 function searchByFeature(queryString) {
 
   var tokenQueryString = tokenizeString(queryString);
@@ -64,13 +80,13 @@ function searchByFeature(queryString) {
 }
 
 function getNextBest(tokenString){
-  var nextBestObject;
+  //var nextBestObject;
   var species_count;
   //create query from tokenString
   var base_query = createQueryGetNextBest(tokenString);
   var next_best_query = base_query + "return distinct nextFeature, count(*) as count order by count desc";
   //return list of adjacent features and count of species
-  console.log(next_best_query);
+  //console.log(next_best_query);
   var session = driver.session();
   return session
   .run(next_best_query)
@@ -154,6 +170,65 @@ function getCandidates(tokenString){
     });
 }
 
+function getGraph(tokenString) {
+  var tokenQueryString = createQueryFromQueryTokens(tokenString);
+  var session = driver.session();
+  var defaultQuery = 'MATCH (feature0:Property)<--(species:Skate) \
+  return species.common_name as Name,collect(feature0.desc) as Feature \
+  order by species.common_name'
+  var optional = tokenQueryString;
+  var query = (!tokenString)? defaultQuery : optional;
+  console.log("graph query ");
+  console.log(query);
+  return session.run(
+      query)
+    .then(results => {
+      session.close();
+      var nodes = [], rels = [], i = 0;
+      results.records.forEach(res => {
+        //species nodes
+        nodes.push({title: res.get('Name'), label: 'Species'});
+        var target = i;
+        i++;
+        //primary feature nodes
+        res.get('Feature').forEach(name => {
+          //check here if feature is primary or secondary
+          var groupId;
+          var featureArr = tokenString.split(",");
+          if (!tokenString){
+            groupId = 1;
+          } else {
+            groupId = featureArr.indexOf(name);
+          }
+
+          var feature = {title: name, label: 'Feature', group: groupId};
+          var source = _.findIndex(nodes, feature);
+          if (source == -1) {
+            nodes.push(feature);
+            source = i;
+            i++;
+          }
+          rels.push({source, target})
+        })
+
+        // res.get('nextFeature').forEach(name => {
+        //   if (name) {
+        //     var feature = {title: name, label: 'Feature', group: 2};
+        //     var source = _.findIndex(nodes, feature);
+        //     if (source == -1) {
+        //       nodes.push(feature);
+        //       source = i;
+        //       i++;
+        //     }
+        //     rels.push({source, target})
+        //   }
+
+        // })        
+      });
+      return {nodes, links: rels};
+    });
+}
+
 // function getGraph(queryString) {
 //   var session = driver.session();
 //   var defaultQuery = 'match (sk:Skate)-[r:HAS_A]->(p:Property)  \
@@ -186,39 +261,6 @@ function getCandidates(tokenString){
 //       return {nodes, links: rels};
 //     });
 // }
-
-function getGraph(queryString) {
-  var session = driver.session();
-  var defaultQuery = 'match (sk:Skate)-[r:HAS_A]->(p:Property)  \
-      return p.desc as Description,collect( sk.common_name) as Name'
-  var optional = "match (sk:Skate)-[r:HAS_A]->(p:Property) where p.desc = " + "'" + queryString + "'" + " \
-      return p.desc as Description,collect( sk.common_name) as Name"
-  var query = (!queryString)? defaultQuery : optional;
-
-  return session.run(
-      query)
-    .then(results => {
-      session.close();
-      var nodes = [], rels = [], i = 0;
-      results.records.forEach(res => {
-        nodes.push({title: res.get('Description'), label: 'Property'});
-        var target = i;
-        i++;
-
-        res.get('Name').forEach(name => {
-          var species = {title: name, label: 'Skate'};
-          var source = _.findIndex(nodes, species);
-          if (source == -1) {
-            nodes.push(species);
-            source = i;
-            i++;
-          }
-          rels.push({source, target})
-        })
-      });
-      return {nodes, links: rels};
-    });
-}
 
 // function getGraph() {
 //   var session = driver.session();

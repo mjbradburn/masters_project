@@ -9,21 +9,23 @@ $(function () {
   $("#search").submit(e => {
     e.preventDefault();
     search();
-    $("#graph").empty();
-    renderGraph($("#search").find("input[name=search]").val());
+    // $("#graph").empty();
+    // renderGraph($("#search").find("input[name=search]").val());
   });
 
   $("#query").submit(e => {
     e.preventDefault();
     query();
-    //$("#graph").empty();
-    //renderGraph($("#search").find("input[name=search]").val());
+    $("#graph").empty();
+    renderGraph($('#query-builder').val());
   });
 
 });
 
 $("#search-clear").click(function(){
   $('#search-input').val("");
+  $("#graph").empty();
+  renderGraph("");
   search();
 });
 
@@ -31,6 +33,8 @@ $("#query-clear").click(function(){
   $('#query-builder').tagsinput('removeAll');
   $('#candidates-count tbody').empty();
   $('#next-best tbody').empty();
+  $("#graph").empty();
+  renderGraph("");
 });
 // function showMovie(title) {
 //   console.log(title);
@@ -65,10 +69,12 @@ function search() {
             .click(function() {
               // showMovie($(this).find("td.movie").text());
               
-              $("#graph").empty();
+              //$("#graph").empty();
               // renderGraph($(this).find("td.feature").text());
 
               $("#query-builder").tagsinput('add', feature.desc);
+              $('#search-input').val("");
+              search();
             })
         });
 
@@ -80,6 +86,8 @@ function search() {
     });
 }
 
+
+
 function query(){
   var tokens = $('#query-builder').val();
   var token_count = tokens.split(",").length;
@@ -87,8 +95,27 @@ function query(){
   var t = $('#candidates-count tbody').empty();
   var candidates = api.getCandidates(tokens).then( candidates => {
     candidates.forEach(candidate => {
-      $('<tr><td>' + candidate.species + '</td><td>' + Math.round(candidate.count/token_count*100) + '%</td>').appendTo(t);
-    })
+      $('<tr><td>' + candidate.species + '</td><td>' + Math.round(candidate.count/token_count*100) + '%</td>').appendTo(t)
+      .hover(
+        function(){
+          $('circle').css('stroke-width', '1.5px');
+          var searchString = $(this).children().first().text();
+          $('circle > title').filter(function(){
+            return $(this).first().text() == searchString;
+          }).parent().css('stroke-width', '5px');
+        }
+      );
+        //var searchString = $(this).children().first().text();
+        //console.log(searchString);
+        // $('circle > title').filter(function(){
+        //   return $(this).first().text() == searchString;
+        // }).parent().css('stroke-width', '5px');}
+        // function(){ $('circle').css('stroke-width', '1.5px');
+
+        // }
+
+      });
+
   });
   //pass tokens to api.getNextBest
   var ta = $('#next-best tbody').empty();
@@ -96,6 +123,15 @@ function query(){
     features.forEach(feature => {
       console.log(feature.desc);
       $('<tr><td>' + feature.desc + '</td><td>' + feature.count + '</td>').appendTo(ta)
+            .hover(
+              function(){
+                $('circle').css('stroke-width', '1.5px');
+                var searchString = $(this).children().first().text();
+                $('circle > title').filter(function(){
+                return $(this).first().text() == searchString;
+              }).parent().css('stroke-width', '5px');
+            }
+          )
       .click(function(){
         $("#query-builder").tagsinput('add', feature.desc);
 
@@ -197,18 +233,18 @@ function query(){
 //     });
 // }
 
-function renderGraph(queryString) {
+function renderGraph(tokenString) {
   var width = 800, height = 800;
   var force = d3.layout.force()
     .charge(-200).linkDistance(30).size([width, height]);
   var svg = d3.select("#graph").append("svg")
     .attr("width", "100%").attr("height", "100%")
     .attr("pointer-events", "all");
-
+  //var color = d3.scaleOrdinal(d3.schemeCategory20);
   // $("svg").css({display: 'inline-block'});//{top: -100, left: 200, position:'relative'});
 
   api
-    .getGraph(queryString)
+    .getGraph(tokenString)
     .then(graph => {
       force.nodes(graph.nodes).links(graph.links).start();
 
@@ -222,7 +258,8 @@ function renderGraph(queryString) {
         .attr("class", d => {
           return "node " + d.label
         })
-        .attr("r", 10)
+        .attr("r", 8)
+        .attr("fill", function(d) { return d.group == -1? '#23CE6B' : '#00A6A6' ; })
         .call(force.drag);
 
 
@@ -234,12 +271,31 @@ function renderGraph(queryString) {
 
       //adding click interactivity
       node.on("dblclick",(function(d){
-        $("#graph").empty();
-        renderGraph(d.title);
-        searchFromGraph(d.title);
-        //$("#query-builder").tagsinput('add', d.title);
-        
+        //$("#graph").empty();
+        //renderGraph(d.title);
+        //searchFromGraph(d.title);
+        $("#query-builder").tagsinput('add', d.title);
+
       }));
+
+      // node.on("mouseover", (
+      //   function(d){
+      //     //$('circle').css('stroke-width', '1.5px');
+      //     var searchString = d.title;
+      //     //console.log(d.title);
+      //     $('#candidates-count > tbody > tr > td:first-child , #next-best > tbody > tr > td:first-child' )
+      //     .filter(function(){
+      //       console.log($(this).text() == searchString);
+      //       return $(this).text() == searchString;
+      //     }).css('font-weight', 'bold');
+      //   })
+      // );
+
+      // node.on("mouseleave", 
+      //   function(d){
+
+      //   })
+      // );
 
 
       // force feed algo ticks
