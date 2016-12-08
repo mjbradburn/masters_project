@@ -35,5 +35,20 @@ Row styles / Overrides
 	padding-right:10px;
 }
 /* ---------------------------------------
-Search input
+Node styles
 ------------------------------------------ */
+.node { stroke: #222; stroke-width: 1.5px; }
+/*    .node.Feature { fill: #5995ED; } */
+.node.Species { fill: #C3C3C3; } 
+.link { stroke: #999; stroke-opacity: .6; stroke-width: 1px; }
+
+/* ---------------------------------------
+Graph styles
+------------------------------------------ */
+#graph {
+    position: absolute;
+    top: -100;
+    margin: auto;
+    height: 100%;
+    width: 100%;
+}

@@ -26,12 +26,12 @@ function tokenizeString(queryString){
 
 function createQueryGetNextBest(tokenString){
   var tokens = tokenString.split(",");
-  var queryString = `MATCH (feature0:Property {desc:'${tokens[0]}' })<--(sk:Skate)`;
+  var queryString = `MATCH (feature0:Property {desc:'${tokens[0]}' })<--(spp:Skate)`;
   
   for (var i = 1; i < tokens.length; i++){
-    queryString += `, (sk)-->(feature${i}:Property {desc:  '${tokens[i]}'})`;
+    queryString += `, (spp)-->(feature${i}:Property {desc:  '${tokens[i]}'})`;
   }
-  queryString += ',(sk)-->(nextFeature:Property) where not (ID(nextFeature) in [';
+  queryString += ',(spp)-->(nextFeature:Property) where not (ID(nextFeature) in [';
   
   for (var i = 0; i < tokens.length; i++){
     queryString += `ID(feature${i})`;
@@ -48,12 +48,12 @@ function createQueryFromQueryTokens(tokenString){
   var queryString = ``;// = `MATCH (feature0:Property {desc:'${tokens[0]}' })<--(sk:Skate)`;
   console.log(tokens);
   for (var i = 0; i < tokens.length; i++){
-    queryString += `MATCH (sk)-->(feature${i}:Property {desc:  '${tokens[i]}'}) `;
+    queryString += `MATCH (spp)-->(feature${i}:Property {desc:  '${tokens[i]}'}) `;
   }
 
-  queryString += `MATCH (sk)-->(allFeatures:Property) \
-  return sk.common_name as Name, collect(allFeatures.desc) AS Feature
-  order by sk.common_name`;
+  queryString += `MATCH (spp)-->(allFeatures:Property) \
+  return spp.common_name as Name, collect(allFeatures.desc) AS Feature
+  order by spp.common_name`;
   return queryString;  
 }
 
@@ -84,9 +84,10 @@ function getNextBest(tokenString){
   var species_count;
   //create query from tokenString
   var base_query = createQueryGetNextBest(tokenString);
-  var next_best_query = base_query + "return distinct nextFeature, count(*) as count order by count desc";
+  var next_best_query = base_query + " with count(distinct spp) as total " + base_query + 
+  " return nextFeature, count(*) as count, abs((abs(count(*) - total)*1.0/total)-0.5) as score order by score asc";
   //return list of adjacent features and count of species
-  //console.log(next_best_query);
+  console.log(next_best_query);
   var session = driver.session();
   return session
   .run(next_best_query)
@@ -150,9 +151,9 @@ function getCandidates(tokenString){
   var session = driver.session();
   return session
     .run(
-      "MATCH (feature:Property)<--(species:Skate) \
+      "MATCH (feature:Property)<--(spp:Skate) \
       where " + tokenQueryString + "\
-      return species, count(*) AS count order by count desc"
+      return spp, count(*) AS count order by count desc"
     ).then(results =>{
       session.close();
       var candidates =[];
@@ -173,9 +174,9 @@ function getCandidates(tokenString){
 function getGraph(tokenString) {
   var tokenQueryString = createQueryFromQueryTokens(tokenString);
   var session = driver.session();
-  var defaultQuery = 'MATCH (feature0:Property)<--(species:Skate) \
-  return species.common_name as Name,collect(feature0.desc) as Feature \
-  order by species.common_name'
+  var defaultQuery = 'MATCH (feature0:Property)<--(spp:Skate) \
+  return spp.common_name as Name,collect(feature0.desc) as Feature \
+  order by spp.common_name'
   var optional = tokenQueryString;
   var query = (!tokenString)? defaultQuery : optional;
   console.log("graph query ");
