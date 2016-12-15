@@ -1,7 +1,6 @@
 var api = require('./neo4jApi');
 
 $(function () {
-  
   $("#query-builder").tagsinput('add', "");
   renderGraph("");
   search();
@@ -20,9 +19,15 @@ $(function () {
     renderGraph($('#query-builder').val());
   });
 
-
 });
 
+function contentAdjust() {
+  if ($('.navbar').height() > 75) {
+    $('body').css('margin-top', '50');
+  } else {
+    $('body').css('margin-top', '0');
+  } 
+}
 
 $("#search-clear").click(function(){
   $('#search-input').val("");
@@ -36,6 +41,7 @@ $("#query-clear").click(function(){
   $('#candidates-count tbody').empty();
   $('#next-best tbody').empty();
   $("#graph").empty();
+  contentAdjust();
   renderGraph("");
 });
 // function showMovie(title) {
@@ -58,6 +64,8 @@ $("#query-clear").click(function(){
 //     }, "json");
 // }
 
+
+
 function search() {
   var query = $("#search").find("input[name=search]").val();
   api
@@ -74,11 +82,7 @@ function search() {
               // renderGraph($(this).find("td.feature").text());
               $("#query-builder").tagsinput('add', feature.desc);
               //push down content if navbar resizes
-              if ($('.navbar').height() > 75) {
-                $('body').css('margin-top', '50');
-              } else {
-                $('body').css('margin-top', '0');
-              }  
+              contentAdjust();
 
               $('#search-input').val("");
               search();
@@ -141,7 +145,7 @@ function query(){
           )
       .click(function(){
         $("#query-builder").tagsinput('add', feature.desc);
-
+        contentAdjust();
       });
     })
   });
@@ -282,6 +286,7 @@ function renderGraph(tokenString) {
         //renderGraph(d.title);
         //searchFromGraph(d.title);
         $("#query-builder").tagsinput('add', d.title);
+        contentAdjust();
 
       }));
 
