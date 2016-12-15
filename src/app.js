@@ -20,7 +20,9 @@ $(function () {
     renderGraph($('#query-builder').val());
   });
 
+
 });
+
 
 $("#search-clear").click(function(){
   $('#search-input').val("");
@@ -68,11 +70,16 @@ function search() {
           $("<tr><td class='feature'>" + feature.desc + "</td>" ).appendTo(t)
             .click(function() {
               // showMovie($(this).find("td.movie").text());
-              
               //$("#graph").empty();
               // renderGraph($(this).find("td.feature").text());
-
               $("#query-builder").tagsinput('add', feature.desc);
+              //push down content if navbar resizes
+              if ($('.navbar').height() > 75) {
+                $('body').css('margin-top', '50');
+              } else {
+                $('body').css('margin-top', '0');
+              }  
+
               $('#search-input').val("");
               search();
             })
@@ -234,11 +241,11 @@ function query(){
 // }
 
 function renderGraph(tokenString) {
-  var width = 800, height = 800;
+  var width = 1000, height = 1000;
   var force = d3.layout.force()
     .charge(-200).linkDistance(30).size([width, height]);
   var svg = d3.select("#graph").append("svg")
-    .attr("width", "100%").attr("height", "100%")
+    .attr("width", "100%").attr("height", height)
     .attr("pointer-events", "all");
   //var color = d3.scaleOrdinal(d3.schemeCategory20);
   // $("svg").css({display: 'inline-block'});//{top: -100, left: 200, position:'relative'});

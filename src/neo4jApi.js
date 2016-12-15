@@ -17,7 +17,9 @@ function tokenizeString(queryString){
   var tokens = queryString.split(",");
   var tokenQueryString = "";
   for (var i = 0; i < tokens.length; i++){
-    tokenQueryString += "feature.desc CONTAINS '" + tokens[i] + "'";
+    //tokenQueryString += "feature.desc CONTAINS '" + tokens[i] + "'";
+    tokenQueryString += "feature.desc =~'(?i).*"  + tokens[i] + ".*'  ";
+
     if (i != tokens.length - 1)
       tokenQueryString += " OR "
   }
@@ -64,8 +66,8 @@ function searchByFeature(queryString) {
   var session = driver.session();
   return session
     .run(
-      "MATCH (feature:Property) \
-      where " + tokenQueryString + " return feature"
+      "MATCH (feature:Property)<--(spp:Skate)\
+      where " + tokenQueryString + " return distinct feature order by feature.desc asc"
     )
     .then(result => {
       session.close();
@@ -126,9 +128,9 @@ function getNextBest(tokenString){
 //   return session
 //     .run(
 //       "MATCH (p1:Property {desc:{title}}) \
-//       OPTIONAL MATCH (p1)<-[:HAS_A]-(skate:Skate) \
+//       OPTIONAL MATCH (p1)<-[:HAS_A]-(Skate:Skate) \
 //       RETURN p1.desc AS Description, \
-//       collect(skate.common_name) \
+//       collect(Skate.common_name) \
 //             AS Species", {title})
 //     .then(result => {
 //       session.close();
@@ -158,9 +160,11 @@ function getCandidates(tokenString){
       session.close();
       var candidates =[];
        _.forEach(results.records, function(value){
+      console.log(value);
       
       var candidate = 
       new Candidate(value._fields[0].properties.common_name,value._fields[1].low);
+
       candidates.push(candidate);
     })
       return candidates;
@@ -179,8 +183,8 @@ function getGraph(tokenString) {
   order by spp.common_name'
   var optional = tokenQueryString;
   var query = (!tokenString)? defaultQuery : optional;
-  console.log("graph query ");
-  console.log(query);
+  var query = query + " LIMIT 100";
+
   return session.run(
       query)
     .then(results => {
